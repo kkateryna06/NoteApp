@@ -21,9 +21,14 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             NoteAppTheme {
-                Navigation()
+                Scaffold {
+                    padding ->
+                    Navigation(modifier = Modifier.padding(padding))
+                }
             }
         }
     }
 }
+
+
 
