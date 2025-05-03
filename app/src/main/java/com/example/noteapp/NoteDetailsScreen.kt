@@ -1,18 +1,16 @@
 package com.example.noteapp
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -27,14 +25,12 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -69,7 +65,7 @@ fun NoteDetailsScreen(navController: NavController, viewModel: NoteViewModel, id
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .background(color = colorResource(note.color))
+                .background(color = colorResource(color.value))
         ) {
             OutlinedTextField(
                 value = title.value,
@@ -97,7 +93,9 @@ fun NoteDetailsScreen(navController: NavController, viewModel: NoteViewModel, id
                 IconButton(
                     onClick = {
                         navController.navigateUp()
-                        viewModel.deleteNote(note)
+                        viewModel.onEvent(event = NoteEvent.DeleteNote(
+                            id = id
+                        ) )
                     }
                 ) {
                     Icon(imageVector = Icons.Default.Delete, contentDescription = null)
@@ -106,7 +104,6 @@ fun NoteDetailsScreen(navController: NavController, viewModel: NoteViewModel, id
         }
         if (showDialog.value) {
             ColorPickDialog(showDialog, viewModel, color)
-
         }
         Column(modifier = Modifier
             .fillMaxSize()
@@ -129,13 +126,12 @@ fun NoteDetailsScreen(navController: NavController, viewModel: NoteViewModel, id
                 Button(
                     onClick = {
                         if (title.value.isNotBlank() && content.value.isNotBlank()) {
-                            viewModel.updateNote(
+                            viewModel.onEvent(event = NoteEvent.UpdateNote(
                                 id = id,
                                 title = title.value,
                                 content = content.value,
-                                color = color.value
+                                color = color.value)
                             )
-
                             navController.navigateUp()
                         } else {
                             Toast.makeText(
@@ -143,7 +139,7 @@ fun NoteDetailsScreen(navController: NavController, viewModel: NoteViewModel, id
                             ).show()
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = colorResource(note.color)),
+                    colors = ButtonDefaults.buttonColors(containerColor = colorResource(color.value)),
                     modifier = Modifier
                         .padding(16.dp)
                         .shadow(elevation = 16.dp, shape = RoundedCornerShape(30.dp))
@@ -161,19 +157,32 @@ fun ColorPickDialog(showDialog: MutableState<Boolean>, viewModel: NoteViewModel,
     AlertDialog(
         onDismissRequest = { showDialog.value = false }
     ) {
-        LazyVerticalGrid(columns = GridCells.Fixed(3)) {
-            items(viewModel.colorsList) {
-                colorItem ->
-                Box(
-                    modifier = Modifier
-                        .size(70.dp)
-                        .padding(10.dp)
-                        .background(color = colorResource(colorItem), shape = RoundedCornerShape(20.dp))
-                        .clickable {
-                            color.value = colorItem
-                            showDialog.value = false
-                        }
-                )
+        Column(modifier = Modifier
+            .background(color = Color.White.copy(alpha = 0.7f), shape = RoundedCornerShape(15.dp))
+            .padding(12.dp)
+        ) {
+            Text(text = "Pick a color", fontSize = 18.sp)
+            LazyVerticalGrid(columns = GridCells.Fixed(3)) {
+                items(viewModel.colorsList) { colorItem ->
+                    Box(
+                        modifier = Modifier
+                            .size(80.dp)
+                            .padding(10.dp)
+                            .background(
+                                color = colorResource(colorItem),
+                                shape = RoundedCornerShape(20.dp)
+                            )
+                            .clickable {
+                                color.value = colorItem
+                                showDialog.value = false
+                            }
+                            .border(
+                                color = Color.Black.copy(alpha = 0.5f),
+                                width = if (color.value == colorItem) 3.dp else 1.dp,
+                                shape = RoundedCornerShape(20.dp)
+                            )
+                    )
+                }
             }
         }
     }

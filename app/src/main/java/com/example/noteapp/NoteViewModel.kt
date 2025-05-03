@@ -1,7 +1,5 @@
 package com.example.noteapp
 
-import android.util.Log
-import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -42,19 +40,26 @@ class NoteViewModel: ViewModel() {
         R.color.mint_green, R.color.pale_cyan, R.color.soft_coral
     )
 
-    fun addNote(note: Note) {
-        _notesList.value += note
-        Log.d("DEBUG", "NoteList: ${notesList.value}")
-    }
+    private var _nextId = 6L
 
-    fun deleteNote(note: Note) {
-        _notesList.value -= note
-    }
-
-    fun updateNote(id: Long, title: String, content: String, color: Int) {
-        val index = _notesList.value.indexOfFirst { it.id == id }
-        val updatedList = _notesList.value.toMutableList()
-        updatedList[index] = Note(id, title, content, color)
-        _notesList.value = updatedList
+    fun onEvent(event: NoteEvent) {
+        when (event) {
+            is NoteEvent.AddNote -> {
+                _notesList.value += Note(id = _nextId)
+                _nextId ++
+            }
+            is NoteEvent.DeleteNote -> {
+                val index = _notesList.value.indexOfFirst { it.id == event.id }
+                val updatedList = _notesList.value.toMutableList()
+                updatedList.removeAt(index)
+                _notesList.value = updatedList
+            }
+            is NoteEvent.UpdateNote -> {
+                val index = _notesList.value.indexOfFirst { it.id == event.id }
+                val updatedList = _notesList.value.toMutableList()
+                updatedList[index] = Note(event.id, event.title, event.content, event.color)
+                _notesList.value = updatedList
+            }
+        }
     }
 }

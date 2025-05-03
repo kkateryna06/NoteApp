@@ -1,7 +1,5 @@
 package com.example.noteapp
 
-import androidx.compose.ui.graphics.Color
-
 data class Note(
     val id: Long,
     val title: String = "Title",

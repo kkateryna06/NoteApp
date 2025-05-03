@@ -1,7 +1,5 @@
 package com.example.noteapp
 
-import android.util.Log
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -34,10 +32,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import kotlinx.coroutines.launch
 
 @Composable
 fun MainNoteScreen(navController: NavController, viewModel: NoteViewModel, modifier: Modifier) {
@@ -57,10 +53,7 @@ fun MainNoteScreen(navController: NavController, viewModel: NoteViewModel, modif
         Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End) {
             Button(
                 onClick = {
-                    val id = (notes.value.size+1).toLong()
-                    viewModel.addNote(Note(id = id))
-                    navController.navigate(Screen.DetailsScreen.route + "/${id}")
-                    Log.d("DEBUG", "id: $id")
+                    viewModel.onEvent(event = NoteEvent.AddNote)
                 }
             ) {
                 Text(text = "New note")
