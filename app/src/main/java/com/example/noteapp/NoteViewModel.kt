@@ -1,38 +1,24 @@
 package com.example.noteapp
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 
 class NoteViewModel: ViewModel() {
-    private val _notesList: MutableStateFlow<List<Note>> = MutableStateFlow(listOf(
-        Note(
-            id = 1L,
-            title = "Shopping List",
-            content = "Milk, Eggs, Bread, Butter"
-        ),
-        Note(
-            id = 2L,
-            title = "Workout Plan",
-            content = "Mon: Chest, Tue: Back, Wed: Legs"
-        ),
-        Note(
-            id = 3L,
-            title = "Meeting Notes",
-            content = "Discuss UI redesign and deadlines"
-        ),
-        Note(
-            id = 4L,
-            title = "Ideas",
-            content = "Build a mood tracker app with Kotlin"
-        ),
-        Note(
-            id = 5L,
-            title = "Reminder",
-            content = "Call dentist on Friday"
-        )
-    ))
-    val notesList: StateFlow<List<Note>> = _notesList
+    private val noteRepository = Graph.getNoteRepository()
+
+    private val _notes: MutableStateFlow<List<Note>> = MutableStateFlow(emptyList())
+    val notesList: StateFlow<List<Note>> = _notes
+
+    init {
+        getAllNotes()
+    }
 
     val colorsList = listOf(
         R.color.peach, R.color.lavender, R.color.baby_pink,
@@ -40,25 +26,31 @@ class NoteViewModel: ViewModel() {
         R.color.mint_green, R.color.pale_cyan, R.color.soft_coral
     )
 
-    private var _nextId = 6L
+    private var _nextId = 1L
+
+    private fun getAllNotes() {
+        noteRepository.getAllNotes().onEach { notesList ->
+            _notes.value = notesList
+        }.launchIn(viewModelScope)
+    }
 
     fun onEvent(event: NoteEvent) {
         when (event) {
             is NoteEvent.AddNote -> {
-                _notesList.value += Note(id = _nextId)
-                _nextId ++
+                viewModelScope.launch(Dispatchers.IO) {
+                    noteRepository.addANote(Note())
+                    _nextId ++
+                }
             }
             is NoteEvent.DeleteNote -> {
-                val index = _notesList.value.indexOfFirst { it.id == event.id }
-                val updatedList = _notesList.value.toMutableList()
-                updatedList.removeAt(index)
-                _notesList.value = updatedList
+                viewModelScope.launch(Dispatchers.IO) {
+                    noteRepository.deleteANote(event.id)
+                }
             }
             is NoteEvent.UpdateNote -> {
-                val index = _notesList.value.indexOfFirst { it.id == event.id }
-                val updatedList = _notesList.value.toMutableList()
-                updatedList[index] = Note(event.id, event.title, event.content, event.color)
-                _notesList.value = updatedList
+                viewModelScope.launch(Dispatchers.IO) {
+                    noteRepository.updateANote(event.id, event.title, event.content, event.color)
+                }
             }
         }
     }

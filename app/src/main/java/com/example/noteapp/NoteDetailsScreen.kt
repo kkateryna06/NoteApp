@@ -1,5 +1,6 @@
 package com.example.noteapp
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -29,6 +30,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
@@ -51,7 +53,16 @@ import androidx.navigation.compose.rememberNavController
 @Composable
 fun NoteDetailsScreen(navController: NavController, viewModel: NoteViewModel, id: Long, modifier: Modifier) {
     val notes = viewModel.notesList.collectAsState()
-    val note = notes.value[id.toInt()-1]
+    val index = notes.value.indexOfFirst { it.id == id }
+
+    if (index == -1) {
+        LaunchedEffect(Unit) {
+            navController.navigateUp()
+        }
+        return
+    }
+    Log.d("DEBUG", "index: $index")
+    val note = notes.value[index]
 
     val title = remember { mutableStateOf(note.title) }
     val content = remember { mutableStateOf(note.content) }
@@ -92,7 +103,6 @@ fun NoteDetailsScreen(navController: NavController, viewModel: NoteViewModel, id
                 }
                 IconButton(
                     onClick = {
-                        navController.navigateUp()
                         viewModel.onEvent(event = NoteEvent.DeleteNote(
                             id = id
                         ) )
@@ -126,12 +136,12 @@ fun NoteDetailsScreen(navController: NavController, viewModel: NoteViewModel, id
                 Button(
                     onClick = {
                         if (title.value.isNotBlank() && content.value.isNotBlank()) {
-                            viewModel.onEvent(event = NoteEvent.UpdateNote(
+                            viewModel.onEvent(NoteEvent.UpdateNote(
                                 id = id,
                                 title = title.value,
                                 content = content.value,
-                                color = color.value)
-                            )
+                                color = color.value
+                            ))
                             navController.navigateUp()
                         } else {
                             Toast.makeText(
